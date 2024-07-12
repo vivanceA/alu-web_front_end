@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+        <meta charset="utf-8" />
+        <title>Task 7</title>
+        <style>
+            .delete-cell {
+                background-color: orange;
+                cursor: pointer;
+            }
+        </style>
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+        <script type="application/javascript">
+            $(document).ready(function () {
+                function createSearchForm() {
+                    $('body').append('<input type="text">');
+                    $('body').append('<input type="submit">');
+
+                    $('input[type="submit"]').click(function (e) {
+                        e.preventDefault();
+                        var text = $('input[type="text"]').val();
+                        if (text) {
+                            queryWikipedia(text);
+                        }
+                    });
+
+                    $('body').append('<ul></ul>');
+                }
+
+                function addNewArticle(id, title, snippet) {
+                    $('ul').append(
+                        $('<li></li>').append(
+                            $('<p></p>').append(
+                                $('<span></span>').text(id + " - "),
+                                $('<b></b>').text(title)
+                            ),
+                            $('<p></p>').html(snippet)
+                        )
+                    );
+                }
+
+                function queryWikipedia(search) {
+                    const apiUrl = 'https://en.wikipedia.org/w/api.php';
+                    const data = {
+                        action: 'query',
+                        format: 'json',
+                        list: 'search',
+                        srsearch: search,
+                        origin: '*'
+                    };
+
+                    $.ajax({
+                        url: apiUrl,
+                        method: 'GET',
+                        data: data,
+                        dataType: 'json'
+                    }).then(function (data) {
+                        $('ul').empty();
+                        data.query.search.forEach(function(result) {
+                            addNewArticle(result.pageid, result.title, result.snippet);
+                        });
+                    }).fail(function(error) {
+                        console.error('Error:', error);
+                    });
+                }
+
+                createSearchForm();
+            });
+        </script>
+    </head>
+    <body>
+    </body>
+</html>

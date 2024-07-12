@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+        <meta charset="utf-8" />
+        <title>Task 8</title>
+        <style>
+            .delete-cell {
+                background-color: orange;
+                cursor: pointer;
+            }
+            #pagination {
+                display: flex;
+                list-style-type: none;
+                padding: 0;
+            }
+            #pagination li {
+                cursor: pointer;
+                margin-left: 10px;
+            }
+            #pagination li.active {
+                font-weight: bold;
+            }
+        </style>
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+        <script type="application/javascript">
+            $(document).ready(function () {
+                const ITEMS_PER_PAGE = 10;
+
+                function createSearchForm() {
+                    $('body').append('<input type="text">');
+                    $('body').append('<input type="submit">');
+
+                    $('input[type="submit"]').click(function (e) {
+                        e.preventDefault();
+                        var text = $('input[type="text"]').val();
+                        if (text) {
+                            queryWikipedia(text);
+                        }
+                    });
+
+                    $('body').append('<ul id="results"></ul>');
+                    $('body').append('<ul id="pagination"></ul>');
+                }
+
+                function addNewArticle(id, title, snippet) {
+                    $('#results').append(
+                        $('<li></li>').append(
+                            $('<p></p>').append(
+                                $('<span></span>').text(id + " - "),
+                                $('<b></b>').text(title)
+                            ),
+                            $('<p></p>').html(snippet)
+                        )
+                    );
+                }
+
+                function queryWikipedia(search, offset = 0) {
+                    const apiUrl = 'https://en.wikipedia.org/w/api.php';
+                    const data = {
+                        action: 'query',
+                        format: 'json',
+                        list: 'search',
+                        srsearch: search,
+                        sroffset: offset,
+                        srlimit: ITEMS_PER_PAGE,
+                        origin: '*'
+                    };
+
+                    $.ajax({
+                        url: apiUrl,
+                        method: 'GET',
+                        data: data,
+                        dataType: 'json'
+                    }).then(function (data) {
+                        $('#results').empty();
+                        data.query.search.forEach(function(result) {
+                            addNewArticle(result.pageid, result.title, result.snippet);
+                        });
+                        buildPagination(data.query.searchinfo.totalhits, ITEMS_PER_PAGE, offset);
+                    }).fail(function(error) {
+                        console.error('Error:', error);
+                    });
+                }
+
+                function buildPagination(numberOfItems, itemsPerPage, currentOffset) {
+                    const $pagination = $('#pagination');
+                    $pagination.empty();
+
+                    const totalPages = Math.ceil(numberOfItems / itemsPerPage);
+                    const currentPage = Math.floor(currentOffset / itemsPerPage) + 1;
+
+                    for (let i = 1; i <= totalPages; i++) {
+                        const $li = $('<li></li>').text(i);
+                        if (i === currentPage) {
+                            $li.addClass('active');
+                        }
+                        $li.click(function() {
+                            const newOffset = (i - 1) * itemsPerPage;
+                            queryWikipedia($('input[type="text"]').val(), newOffset);
+                        });
+                        $pagination.append($li);
+                    }
+                }
+
+                createSearchForm();
+            });
+        </script>
+    </head>
+    <body>
+    </body>
+</html>
